@@ -5,6 +5,12 @@
 
 using namespace std;
 
+#ifdef ONLINE_JUDGE
+const bool debug = false;
+#else
+const bool debug = true;
+#endif
+
 struct Edge {
     short target;
     char len;
@@ -23,17 +29,14 @@ struct Vertex {
     bool is_set;
 
     char get_color_and_next_change_for_time(const int t0, int &out_t1) const {
-        if(t0 < len_init) {
+        if(t0 <= len_init) {
             out_t1 = len_init;
             return init_color;
-        } else if(t0 == len_init) {
-            out_t1 = len_init;
-            return op[init_color];
         }
 
         int deltat = (t0 - len_init) % (len[0] + len[1]);
 
-        if(deltat < len[op[init_color]]) {
+        if(deltat <= len[op[init_color]]) {
             int change = len[op[init_color]] - deltat;
             out_t1 = t0 + change;
             return op[init_color];
@@ -55,11 +58,6 @@ bool earliest_depart(const vector<Vertex *> v, int t0, int &out_res) {
         out_res = t0;
         return true;
     }
-    if(t[0] != t[1]) {
-        size_t cv = t[0] < t[1] ? 0 : 1;
-        out_res = t[cv];
-        return true;
-    }
 
     //no intersection ever
     if(v[0]->len_init == v[1]->len_init &&
@@ -70,47 +68,50 @@ bool earliest_depart(const vector<Vertex *> v, int t0, int &out_res) {
         return false;
     }
 
-    //if we got here, we have cc[0] != cc[1] && t[0] == t[1]
+    int prev[2] = {-1, -1};
+    while(cc[0] != cc[1]) {
+        if(t[0] == t[1]) {
+            prev[0] = t[0];
+            cc[0] = op[cc[0]];
+            t[0] += v[0]->len[cc[0]];
 
-    while(cc[0] != cc[1] && t[0] == t[1]) {
-        //cv - current vertex
-        size_t cv = t[0] < t[1] ? 0 : 1;
-        int prevt = t[cv];
+            prev[1] = t[1];
+            cc[1] = op[cc[1]];
+            t[1] += v[1]->len[cc[1]];
+        } else {
+            int cv = t[0] < t[1] ? 0 : 1;
 
-        t[cv] += v[cv]->len[cc[cv]];
-        cc[cv] = op[cc[cv]];
-
-        if(t[op[cv]] == prevt) {
-            cv = op[cv];
-            t[cv] += v[cv]->len[cc[cv]];
+            prev[cv] = t[cv];
             cc[cv] = op[cc[cv]];
+            t[cv] += v[cv]->len[cc[cv]];
         }
     }
 
-    out_res = min(t[0], t[1]);
+    out_res = max(prev[0], prev[1]) + 1;
+    assert(out_res != 0);
     return true;
 }
 
 void test_earliest_depart() {
-//    {
-//        Vertex v1, v2;
-//        v1.init_color = 1;
-//        v2.init_color = 0;
-//
-//        v1.len[0] = 3;
-//        v1.len[1] = 4;
-//
-//        v2.len[0] = 4;
-//        v2.len[1] = 2;
-//
-//        v1.len_init = 1;
-//        v2.len_init = 1;
-//
-//        int int_res;
-//        bool res = earliest_depart({&v1, &v2}, 1, int_res);
-//        assert(res);
-//        assert(int_res == 4);
-//    }
+    {
+        Vertex v1, v2;
+        v1.init_color = 1;
+        v2.init_color = 0;
+
+        v1.len[0] = 3;
+        v1.len[1] = 4;
+
+        v2.len[0] = 4;
+        v2.len[1] = 2;
+
+        v1.len_init = 1;
+        v2.len_init = 1;
+
+        int int_res;
+        bool res = earliest_depart({&v1, &v2}, 1, int_res);
+        assert(res);
+        assert(int_res == 4);
+    }
 
     {
         Vertex v1, v2;
@@ -149,7 +150,44 @@ void test_earliest_depart() {
         int int_res;
         bool res = earliest_depart({&v1, &v2}, 1, int_res);
         assert(!res);
-//        assert(int_res == 1);
+    }
+    {
+        Vertex v1, v2;
+        v1.init_color = 0;
+        v2.init_color = 1;
+
+        v1.len[0] = 16;
+        v1.len[1] = 99;
+
+        v2.len[0] = 87;
+        v2.len[1] = 4;
+
+        v1.len_init = 2;
+        v2.len_init = 2;
+
+        int int_res;
+        bool res = earliest_depart({&v1, &v2}, 1, int_res);
+        assert(res);
+        assert(int_res == 90);
+    }
+    {
+        Vertex v1, v2;
+        v1.init_color = 0;
+        v2.init_color = 0;
+
+        v1.len[0] = 32;
+        v1.len[1] = 13;
+
+        v2.len[0] = 96;
+        v2.len[1] = 49;
+
+        v1.len_init = 6;
+        v2.len_init = 38;
+
+        int int_res;
+        bool res = earliest_depart({&v1, &v2}, 6, int_res);
+        assert(res);
+        assert(int_res == 6);
     }
 }
 
@@ -161,19 +199,20 @@ int source, target;
 multimap<int, int> priority;
 
 int main() {
-    test_earliest_depart();
+    if(debug) test_earliest_depart();
 
     scanf("%d %d", &source, &target);
-    scanf("%d %d", &N, &M);
+    scanf("%d %d\n", &N, &M);
 
-    for(int i = 0 ; i < N ; ++i) {
+    for(int i = 1 ; i <= N ; ++i) {
         char c;
         int len_init, len_b, len_p;
-        scanf("%1c %d %d %d", &c, &len_init, &len_b, &len_p);
+        scanf("%1c %d %d %d\n", &c, &len_init, &len_b, &len_p);
         V[i].init_color = c == 'B' ? 0 : 1;
-        V[i].len_init = len_init;
+        V[i].len_init = len_init -1; //we include last index, contrary to problem's terms.
         V[i].len[0] = len_b;
         V[i].len[1] = len_p;
+        if(debug) printf("wrzucam wierzch %1c %d %d %d\n", c, len_init, len_b, len_p);
     }
 
     for(int i = 0 ; i < M; ++i) {
@@ -185,6 +224,7 @@ int main() {
         V[b].e.push_back(e);
         e.target = b;
         V[a].e.push_back(e);
+        if(debug) printf("wrzucam sciezke %d %d %d\n", a, b, l);
     }
 
     for(int i = 1 ; i <= N; ++i) {
@@ -202,29 +242,44 @@ int main() {
         const auto t = it->first;
         const auto vi = it->second;
         const auto v = &V[vi];
+        if(debug) printf("ustalam %d z %d, %ld sciezek\n", vi, t, v->e.size());
         assert(!v->is_set);
         v->is_set = true;
         priority.erase(it);
 
-        if(vi == target) target_dist = t;
+        if(vi == target) {
+            target_dist = t;
+            printf("koniec\n");
+            break;
+        };
 
         for(auto &e : v->e) {
             int earliest_depart_time;
             auto vt = &V[e.target];
-            if(vt->is_set) continue;
+            if(debug) printf("sciezka %d -> %d ", vi, e.target);
+            if(vt->is_set) {
+                if(debug) printf("(ustalony)\n");
+                continue;
+            }
+            if(debug) printf("(nieustalony) ");
             bool depart_possible = earliest_depart({v, vt}, t, earliest_depart_time);
             if(depart_possible) {
+                if(debug) printf("earliest depart %d, len %d ", earliest_depart_time, e.len);
                 int arrival_time = earliest_depart_time + e.len;
 
                 if(vt->priority_it != priority.end() && vt->priority_it->first > arrival_time) {
                     priority.erase(vt->priority_it);
                     vt->priority_it = priority.end();
+                    if(debug) printf("(better)");
                 }
 
                 if(vt->priority_it == priority.end()) {
-                    vt->priority_it = priority.insert(make_pair(e.target, arrival_time));
+                    vt->priority_it = priority.insert(make_pair(arrival_time, e.target));
                     vt->arrival_from = vi;
                 }
+                if(debug) printf("\n");
+            } else {
+                if(debug) printf(" (droga nieprzejezdna)\n");
             }
         }
     }
