@@ -55,42 +55,37 @@ bool earliest_depart(const vector<Vertex *> v, int t0, int &out_res) {
         out_res = t0;
         return true;
     }
+    if(t[0] != t[1]) {
+        size_t cv = t[0] < t[1] ? 0 : 1;
+        out_res = t[cv];
+        return true;
+    }
 
     //no intersection ever
     if(v[0]->len_init == v[1]->len_init &&
        v[0]->len[0] == v[1]->len[1] &&
        v[0]->len[1] == v[1]->len[0] &&
-       v[0]->init_color != v[1]->init_color) return false;
+       v[0]->init_color != v[1]->init_color) {
+        out_res = -1;
+        return false;
+    }
 
-    //iterating towards earliest intersection
-    int prevt[2] = {-1, -1};
+    //if we got here, we have cc[0] != cc[1] && t[0] == t[1]
 
-    while(cc[0] != cc[1]) {
+    while(cc[0] != cc[1] && t[0] == t[1]) {
         //cv - current vertex
-        size_t cv = t[0] > t[1] ? 1 : 0;
+        size_t cv = t[0] < t[1] ? 0 : 1;
+        int prevt = t[cv];
 
-        prevt[cv] = t[cv];
         t[cv] += v[cv]->len[cc[cv]];
         cc[cv] = op[cc[cv]];
 
-        if(t[op[cv]] == prevt[cv]) {
+        if(t[op[cv]] == prevt) {
             cv = op[cv];
-            prevt[cv] = t[cv];
             t[cv] += v[cv]->len[cc[cv]];
             cc[cv] = op[cc[cv]];
         }
     }
-
-//    assert(prevt[0] != -1 || prevt[1] != -1);
-//    if(prevt[0] == -1) {
-//        out_res = prevt[1];
-//        return true;
-//    }
-//    if(prevt[1] == -1) {
-//        out_res = prevt[0];
-//        return true;
-//    }
-//    out_res = max(prevt[0], prevt[1]);
 
     out_res = min(t[0], t[1]);
     return true;
