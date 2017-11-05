@@ -8,7 +8,7 @@ using namespace std;
 #ifdef ONLINE_JUDGE
 const bool debug = false;
 #else
-const bool debug = true;
+const bool debug = false;
 #endif
 
 struct Edge {
@@ -249,7 +249,7 @@ int main() {
 
         if(vi == target) {
             target_dist = t;
-            printf("koniec\n");
+            if(debug) printf("koniec\n");
             break;
         };
 
@@ -299,6 +299,7 @@ int main() {
         for(int i = track.size() -1 ; i >= 0; --i) {
             printf("%d ", track[i]);
         }
+        printf("\n");
     }
 
 
