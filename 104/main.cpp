@@ -21,7 +21,7 @@ int main() {
     for(int i = 1 ; i <= F; ++i) {
         for(int j = 1 ; j <= V; ++j) {
             scanf("%d", &C[i][j]);
-            T[i][j] = -1;
+            T[i][j] = -1000000;
         }
     }
 
@@ -32,8 +32,12 @@ int main() {
          * b > a + F (since they will not contribute to the result.
          *
          * From that we conclude that a portion of the array is wasted, but I keep it for the sake of clarity.
+         *
+         * EDIT:
+         * for some reason above statement seems to be false, and removing it's conclusions leads to solution acceptation.
+         * There is a bug somewhere in my thinking.
          */
-        for(int b = a; b <= V && b <= a + F; ++b) {
+        for(int b = a; b <= V /*&& b <= a + F*/; ++b) {
             if(a == b) {
                 T[a][b] = C[a][b] + (a == 0 ? 0 : T[a-1][b-1]);
                 P[a][b] = 'U'; //use
@@ -51,12 +55,28 @@ int main() {
         }
     }
 
-    if(debug)
-    for(int i = 1; i <= F; ++i) {
-        for(int j = 1; j <= V; ++j) {
-            printf("%d\t", T[i][j]);
+    if(debug) {
+        for (int i = 1; i <= F; ++i) {
+            for (int j = 1; j <= V; ++j) {
+                if (T[i][j] == -1000000) {
+                    printf("\t");
+                } else {
+                    printf("%d\t", T[i][j]);
+                }
+            }
+            printf("\n");
         }
-        printf("\n");
+
+        for (int i = 1; i <= F; ++i) {
+            for (int j = 1; j <= V; ++j) {
+                if (T[i][j] == -1000000) {
+                    printf("\t");
+                } else {
+                    printf("%1c\t", P[i][j]);
+                }
+            }
+            printf("\n");
+        }
     }
 
     vector<int> rev_res;
