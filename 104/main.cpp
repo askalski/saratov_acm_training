@@ -15,13 +15,15 @@ const bool debug = false;
 const bool debug = true;
 #endif
 
+#define unused -1000000
+
 int main() {
     scanf("%d %d", &F, &V);
 
     for(int i = 1 ; i <= F; ++i) {
         for(int j = 1 ; j <= V; ++j) {
             scanf("%d", &C[i][j]);
-            T[i][j] = -1000000;
+            T[i][j] = unused;
         }
     }
 
@@ -39,7 +41,7 @@ int main() {
          */
         for(int b = a; b <= V /*&& b <= a + F*/; ++b) {
             if(a == b) {
-                T[a][b] = C[a][b] + (a == 0 ? 0 : T[a-1][b-1]);
+                T[a][b] = C[a][b] + (a > 1 ? T[a-1][b-1] : 0);
                 P[a][b] = 'U'; //use
             } else { // b > a
                 int cand1 = T[a][b-1]; //ignore the vase
@@ -69,7 +71,7 @@ int main() {
 
         for (int i = 1; i <= F; ++i) {
             for (int j = 1; j <= V; ++j) {
-                if (T[i][j] == -1000000) {
+                if (T[i][j] == unused) {
                     printf("\t");
                 } else {
                     printf("%1c\t", P[i][j]);
