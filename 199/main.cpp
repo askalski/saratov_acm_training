@@ -32,12 +32,13 @@ int main() {
         if(coords.find(c) != coords.end()) continue; //ignore duplicate guy.
         coords.insert(c);
 
-        people.push_back(make_tuple(s,b, i));
+        people.push_back(make_tuple(s,-b, i));//trust me, I am an engineer.
 
         maxx = max(maxx, s);
         maxy = max(maxy, b);
     }
     sort(people.begin(), people.end());
+    for(auto &p : people) get<1>(p) *= -1; //because we want to consider them in decreasing y order.
 
     /*
      * this will simulate one way linked list.
@@ -58,31 +59,36 @@ int main() {
         if(compressed_row.empty()) { //empty
             compressed_row.insert(make_pair(get<1>(p), i));
         } else {
-            auto it = compressed_row.lower_bound(get<1>(p)); //it points to the element that has the same or higher y.
-
-            if (it != compressed_row.end() && get<1>(p) == it->first) {
-                //they both have the same y coordinate -> we always choose the one with lower x (former), discard latter.
-                continue;
-            }
-
-            //from now on, we know that (if 'it' points to some element) 'it' has a strictly lower y value.
+            auto it = compressed_row.upper_bound(get<1>(p)); //it points first to the element that has a strictly higher y
 
             if (it != compressed_row.begin()) {
                 auto pred = it;
                 pred--; //exists since !empty and it != begin()
-                if (get<0>(people[pred->second]) == get<0>(p)) {
-                    //this is a situation where last element shares x with the new one.
-                    //in this case we chose one with lower y, and discard the latter
-                    continue;
-                } else {
-                    //the x coordinates are different (which means the currently review p has it's higher).
-                    //we also know that currently considered person has y coordinate higher.
-                    //We introduce him to the row.
-                    assert(get<0>(people[pred->second]) < get<0>(p));
+                //pred points to element that has lower or equal y
 
-                    compressed_row.insert(make_pair(get<1>(p), i));
+                if(get<1>(people[pred->second]) == get<1>(p)) {
+                    //they have the same y coordinate. In such case, I always choose the one with lower x and discard
+                    //the latter. the lower x has been processed first, so noop.
+                } else {
+                    //now we know, that     people[pred->second].y < p.y
+                    //also we know, that    people[pred->second].x < p.x,
+                    //because all elements with equal x in compressed_row have HIGHER y (clever sorting!)
+                    //and elements with higher x haven't been introduced yet!
+                    assert(get<1>(people[pred->second]) < get<1>(p));
+                    assert(get<0>(people[pred->second]) < get<0>(p));
+                    //"know" :)
+
+                    //so we introduce it
+                    auto new_it = compressed_row.insert(make_pair(get<1>(p), i)).first;
                     queue[i].first = pred->second;
                     queue[i].second = queue[pred->second].second + 1;
+
+                    //however! we might need to remove it's successor (if it exists)
+                    auto succ = new_it;
+                    succ++;
+                    if(succ != compressed_row.end()) {
+                        compressed_row.erase(succ);
+                    }
                 }
             } else {
                 // The y coordinate is lowest witnessed so far. This guy will be the new beginning of 1 in the row. Also,
