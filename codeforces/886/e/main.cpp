@@ -69,23 +69,38 @@ public:
 /*
  * returns r(a,b) = b! / (b-a)! (notation from Feller's book on probability)
  */
-mult_number get_r(int a, int b) {
+
+map<tuple<int, int>, mult_number> get_r_cache;
+const mult_number& get_r(int a, int b) {
     assert(0 <= a);
     assert(a <= b);
+
+    auto it = get_r_cache.find(make_tuple(a,b));
+    if(it != get_r_cache.end()) return it->second;
+
     mult_number res;
     for (int i = b; i > b-a; i--) {
         res *= i;
     }
-    return move(res);
+
+    get_r_cache[make_tuple(a,b)] = move(res);
+    return get_r_cache[make_tuple(a,b)];
 }
 
-mult_number get_factorial(int a) {
+map<int, mult_number> get_factorial_cache;
+const mult_number& get_factorial(int a) {
     assert(a >= 0);
+
+    auto it = get_factorial_cache.find(a);
+    if(it != get_factorial_cache.end()) return it->second;
+
     mult_number res;
     for(;a>0;a--) {
         res *= a;
     }
-    return move(res);
+
+    get_factorial_cache[a] = res;
+    return get_factorial_cache[a];
 }
 
 int main() {
