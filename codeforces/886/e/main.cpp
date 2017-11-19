@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <algorithm>
 #include <cassert>
-#include <vector>
+#include <cmath>
 #include <map>
 
 int n, k;
@@ -125,7 +125,7 @@ int main() {
             }
 
             unsigned long long tmp = local_num.to_ull_mod(p);
-//            printf("a = %d i = %d : tmp = %llu\n", a, i, tmp);
+            printf("a = %d i = %d : tmp = %llu\n", a, i, tmp);
             res += tmp;
             res %= p;
         }
