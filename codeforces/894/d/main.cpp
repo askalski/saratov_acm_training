@@ -17,13 +17,14 @@ struct Vertex {
 
 int N, M;
 
-size_t how_many_below(int n, ull H) {
-    vector<ull>::iterator it = lower_bound(V[n].dist_below.begin(), V[n].dist_below.end(), H);
+int how_many_below(int n, ull H) {
+    vector<ull>::iterator it = upper_bound(V[n].dist_below.begin(), V[n].dist_below.end(), H);
     return distance(V[n].dist_below.begin(), it);
 }
 
 ull sum_below(int n, ull H) {
-    size_t how_many = how_many_below(n, H);
+    int how_many = how_many_below(n, H);
+    assert(how_many >= 1);
     ull summ = V[n].partial_sums[how_many-1];
     summ = H*how_many - summ;
     return summ;
@@ -44,10 +45,12 @@ ull sum_above(int n, ull H/*, int &how_many*/) {
         res += H - V[n].dist_to_father;
         res += sum_above(n/2, H-V[n].dist_to_father);
 
-        ull sum_dist = V[n].dist_to_father + V[other_child].dist_to_father;
+        if(other_child <= N) {
+            ull sum_dist = V[n].dist_to_father + V[other_child].dist_to_father;
 
-        if(sum_dist <= H) {
-            res += sum_below(other_child, H-sum_dist);
+            if (sum_dist <= H) {
+                res += sum_below(other_child, H - sum_dist);
+            }
         }
 
         return res;
