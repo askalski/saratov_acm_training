@@ -1,72 +1,38 @@
 #include <cstdio>
-#include <vector>
-using namespace std;
+#include <algorithm>
 
-struct Cell {
-    enum {
-        Type_Unit,
-        Type_Substr
-    } Type;
+const int K = 100*1000;
+int D[2*K + 1];
 
-    int Param;
-};
-
-inline void reduce(vector<Cell> &stack, int &best) {
-    bool done = false;
-    while(!done) {
-        done = true;
-        if(stack.size() > 1 &&
-           stack[stack.size()-1].Type == Cell::Type_Substr &&
-           stack[stack.size()-2].Type == Cell::Type_Substr)
-        {
-            stack[stack.size()-2].Param += stack[stack.size()-1].Param;
-            best = max(best, stack[stack.size()-2].Param);
-            stack.pop_back();
-            done = false;
-        }
-
-        if(stack.size() > 1 &&
-           stack[stack.size()-1].Type == Cell::Type_Unit &&
-           stack[stack.size()-2].Type == Cell::Type_Unit &&
-           stack[stack.size()-1].Param + stack[stack.size()-2].Param == 0) {
-            stack[stack.size()-2].Type = Cell::Type_Substr;
-            stack[stack.size()-2].Param = 2;
-            best = max(best, stack[stack.size()-2].Param);
-            stack.pop_back();
-            done = false;
-        }
-
-        if(stack.size() > 2 &&
-           stack[stack.size()-1].Type == Cell::Type_Unit &&
-           stack[stack.size()-2].Type == Cell::Type_Substr &&
-           stack[stack.size()-3].Type == Cell::Type_Unit &&
-           stack[stack.size()-1].Param + stack[stack.size()-3].Param == 0) {
-            stack[stack.size()-3].Type = Cell::Type_Substr;
-            stack[stack.size()-3].Param = stack[stack.size()-2].Param + 2;
-            best = max(best, stack[stack.size()-3].Param);
-            stack.pop_back();
-            stack.pop_back();
-            done = false;
-        }
-    }
-}
+/*
+ * let S[i] = -1*(#0) + (#1) in series [1..N].
+ * let D[s + K] = earliest index i such that S[i] = s, or -1 if no such index exist.
+ */
 
 int main() {
-    vector<Cell> stack;
 
     int N;
     int best = 0;
-    scanf("%d\n", &N);
 
-    for(int i = 0 ; i < N; ++i) {
+    scanf("%d\n", &N);
+    for(int i = -N; i <= N; ++i) {
+        D[i + K] = -1;
+    }
+
+    int s = 0;
+    D[0 + K] = 0;
+
+    for(int i = 1 ; i <= N; ++i) {
         char c;
         scanf("%1c", &c);
-        Cell cell;
-        cell.Type = Cell::Type_Unit;
-        cell.Param = c - '0';
-        if(cell.Param == 0) cell.Param = -1;
-        stack.push_back(cell);
-        reduce(stack, best);
+        if(c == '0') s--; else s++;
+
+        if(D[s+K] != -1) {
+            int candidate = i - D[s+K];
+            best = std::max(best, candidate);
+        } else {
+            D[s+K] = i;
+        }
     }
 
     printf("%d\n", best);
