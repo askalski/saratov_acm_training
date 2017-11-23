@@ -1,4 +1,4 @@
-//does not work :(
+//fixed! took me brut force to find counterexample. Damn you TC!
 
 #include <vector>
 #include <cassert>
@@ -82,14 +82,20 @@ public:
         for(int i = 3; i < A.size(); ++i) {
             T[i] = A[i] + std::max(T[i-2], T[i-3]);
         }
-        return T[A.size()-1];
+
+        for(int i = 0 ; i < A.size(); ++i) {
+            printf("%d\t", T[i]);
+        }
+        printf("\n");
+
+        return std::max(T[A.size()-2], T[A.size()-1]);
     }
 
     int maxDonations(vector <int> A) {
 
         vector<int> A1(A);
         A1.pop_back();
-        vector<int> A2(A.size()-1);
+        vector<int> A2;
         for(int i = 1 ; i < A.size(); ++i) A2.push_back(A[i]);
 
 
