@@ -16,19 +16,6 @@ bool collide(const tuple<int, int,int> &a, const tuple<int, int, int>&b) {
     return false;
 }
 
-void position_itself(vector<int>& result, int idx, vector<tuple<int, int, int> >& flowers, set<int>& done) {
-    if(done.find(get<0>(flowers[idx])) != done.end()) return;
-
-    for(int j = idx-1; j >= 0; j--) {
-        if(collide(flowers[j], flowers[idx])) {
-            position_itself(result, j, flowers, done);
-        }
-    }
-
-    result.push_back(get<0>(flowers[idx]));
-    done.insert(get<0>(flowers[idx]));
-}
-
 //in brut force I use indices in ordering, not heights
 
 bool isOrderingGood(const vector<int>& ordering, const vector<tuple<int, int, int> >& flowers) {
@@ -102,6 +89,23 @@ public:
 };
 
 class FlowerGarden : public IFlowerGarden {
+private:
+    void position_itself(vector<int>& result, int idx, vector<tuple<int, int, int> >& flowers, set<int>& done) {
+        if(done.find(get<0>(flowers[idx])) != done.end()) return;
+
+        printf("pi: %d\n", get<0>(flowers[idx]));
+
+        for(int j = idx-1; j >= 0; j--) {
+            if(collide(flowers[j], flowers[idx])) {
+                position_itself(result, j, flowers, done);
+            }
+        }
+
+        result.push_back(get<0>(flowers[idx]));
+        done.insert(get<0>(flowers[idx]));
+        printf("po: %d\n", get<0>(flowers[idx]));
+    }
+
 public:
     vector <int> getOrdering(vector <int> height, vector <int> bloom, vector <int> wilt) {
 
@@ -112,9 +116,22 @@ public:
 
         sort(flowers.begin(), flowers.end());
 
-        vector<int> res;
+        vector<vector<int> > ress;
         set<int> done;
-        for(int i = flowers.size()-1; i >= 0; --i) position_itself(res, i, flowers, done);
+        for(int i = flowers.size()-1; i >= 0; --i) {
+            vector<int> tmpres;
+            position_itself(tmpres, i, flowers, done);
+            ress.push_back(tmpres);
+        }
+
+        sort(ress.begin(), ress.end());
+
+        vector<int> res;
+        for(int i = ress.size() -1; i>=0; i--) {
+            for(int j = 0; j < ress[i].size(); ++j) {
+                res.push_back(ress[i][j]);
+            }
+        }
 
         return res;
     }
@@ -123,7 +140,7 @@ public:
 
 int main() {
 
-    int sample = 7;
+    int sample = 4;
     srand(7);
 
     bool done = false;
