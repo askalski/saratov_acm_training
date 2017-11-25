@@ -89,48 +89,37 @@ public:
 };
 
 class FlowerGarden : public IFlowerGarden {
-private:
-    void position_itself(vector<int>& result, int idx, vector<tuple<int, int, int> >& flowers, set<int>& done) {
-        if(done.find(get<0>(flowers[idx])) != done.end()) return;
-
-        printf("pi: %d\n", get<0>(flowers[idx]));
-
-        for(int j = idx-1; j >= 0; j--) {
-            if(collide(flowers[j], flowers[idx])) {
-                position_itself(result, j, flowers, done);
-            }
-        }
-
-        result.push_back(get<0>(flowers[idx]));
-        done.insert(get<0>(flowers[idx]));
-        printf("po: %d\n", get<0>(flowers[idx]));
-    }
-
 public:
     vector <int> getOrdering(vector <int> height, vector <int> bloom, vector <int> wilt) {
 
-        vector<tuple<int, int, int>> flowers;
-        for(int i = 0 ; i < height.size(); ++i) {
-            flowers.push_back(make_tuple(height[i], bloom[i], wilt[i]));
-        }
-
-        sort(flowers.begin(), flowers.end());
-
-        vector<vector<int> > ress;
-        set<int> done;
-        for(int i = flowers.size()-1; i >= 0; --i) {
-            vector<int> tmpres;
-            position_itself(tmpres, i, flowers, done);
-            ress.push_back(tmpres);
-        }
-
-        sort(ress.begin(), ress.end());
-
         vector<int> res;
-        for(int i = ress.size() -1; i>=0; i--) {
-            for(int j = 0; j < ress[i].size(); ++j) {
-                res.push_back(ress[i][j]);
+        vector<bool> used(height.size(), false);
+
+        while(res.size() < height.size()) {
+            int h = -1;
+            int idx = -1;
+            for (int i = 0; i < height.size(); ++i) {
+                if(!used[i]) {
+
+                    bool freeToUse = true;
+
+                    for(int j = 0 ; j < height.size(); ++j) {
+                        if(!used[j] && height[j] < height[i] &&
+                           collide(make_tuple(0, bloom[j], wilt[j]), make_tuple(0, bloom[i], wilt[i]))) {
+                            freeToUse = false; break;
+                        }
+                    }
+
+                    if(freeToUse && h < height[i]) {
+                        h = height[i];
+                        idx = i;
+                    }
+
+                }
             }
+
+            used[idx] = true;
+            res.push_back(height[idx]);
         }
 
         return res;
@@ -140,7 +129,7 @@ public:
 
 int main() {
 
-    int sample = 4;
+    int sample = 6;
     srand(7);
 
     bool done = false;
